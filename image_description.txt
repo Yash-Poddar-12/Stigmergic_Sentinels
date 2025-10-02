@@ -1,0 +1,20 @@
+Figure 1: Thermal Performance Under High Stress
+Title for Paper: Figure 1: Thermal Hotspot Scalability Under High System Load and High Threat Probability.
+
+Context and Analysis: This figure illustrates the thermal performance of the schedulers under the most challenging conditions: a heavy task load combined with a high probability of security threats. The results clearly show that the Stigmergic Sentinels scheduler dramatically reduces the incidence of thermal hotspots compared to both traditional schedulers (CFS, Priority) and the single-pheromone ACO approach. Furthermore, the performance gap between our proposed scheduler and the baselines widens as the number of cores increases, demonstrating the superior scalability and effectiveness of the environmental pheromone mechanism in large, complex systems.
+
+Figure 2: Thermal Performance Under Low Stress
+Title for Paper: Figure 2: Thermal Hotspot Scalability Under Low System Load and Low Threat Probability.
+
+Context and Analysis: To demonstrate the framework's general applicability, Figure 2 presents thermal performance in a low-stress environment. Even when the system is not under heavy load, the Stigmergic Sentinels scheduler provides a significant advantage, generating the fewest thermal hotspots. This proves that the thermal management system is not merely reactive to extreme conditions but consistently optimizes the system's thermal profile, leading to improved efficiency and potentially longer hardware lifespan regardless of the workload.
+
+Figure 3: Security and Performance Scalability Under High Stress
+This figure should be presented as a multi-part figure (a and b) in your paper to show the balance between security and performance.
+
+(a) Security Scalability
+
+(b) Performance Scalability
+
+Title for Paper: Figure 3: Security and Performance Scalability Under High System Load and High Threat Probability.
+
+Context and Analysis: Figure 3 demonstrates that the significant thermal advantages are achieved without compromising other critical metrics. Figure 3(a) shows that the Stigmergic Sentinels scheduler maintains a stable and competitive threat isolation time as the system scales, proving the robustness of the repulsive threat pheromone mechanism under pressure. Crucially, Figure 3(b) shows that this advanced security and thermal intelligence comes at no cost to performance, as the CPU utilization of our scheduler is statistically identical to the other schedulers. This confirms the framework's success in multi-objective optimization without performance overhead.

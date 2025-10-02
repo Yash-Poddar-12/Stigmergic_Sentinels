@@ -2,87 +2,87 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import pandas as pd
 
-OUTPUT_DIR = "plots"
-
-def plot_summary_results(results):
-    """Plots the final summary bar charts."""
-    if not os.path.exists(OUTPUT_DIR):
-        os.makedirs(OUTPUT_DIR)
+def plot_summary_boxplots(all_runs_summary, output_dir):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
         
-    scheduler_names = list(results.keys())
-    metrics = list(results[scheduler_names[0]].keys())
-    
+    scheduler_names = list(all_runs_summary.keys())
+    metric_keys = all_runs_summary[scheduler_names[0]][0].keys()
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
 
-    for metric in metrics:
-        values = [results[name][metric] for name in scheduler_names]
+    for metric in metric_keys:
+        data_to_plot = [[run[metric] for run in all_runs_summary[name]] for name in scheduler_names]
         
-        fig, ax = plt.subplots(figsize=(10, 6))
-        bars = ax.bar(scheduler_names, values, color=colors)
+        fig, ax = plt.subplots(figsize=(10, 7))
+        bp = ax.boxplot(data_to_plot, patch_artist=True, labels=scheduler_names)
         
+        for patch, color in zip(bp['boxes'], colors):
+            patch.set_facecolor(color)
+            
         ax.set_ylabel(metric)
-        ax.set_title(f"Scheduler Comparison: {metric}")
-        ax.set_xticklabels(scheduler_names, rotation=15, ha="right")
+        ax.set_title(f"Performance Distribution: {metric} (over {len(data_to_plot[0])} runs)")
+        ax.tick_params(axis='x', rotation=15)
         plt.grid(axis='y', linestyle='--', alpha=0.7)
-        
-        for bar in bars:
-            yval = bar.get_height()
-            plt.text(bar.get_x() + bar.get_width()/2.0, yval, f'{yval:.2f}', va='bottom', ha='center')
-
         plt.tight_layout()
-        filename = os.path.join(OUTPUT_DIR, f"summary_{metric.replace(' ', '_').replace('%', 'perc').replace('/', 'per')}.png")
+        filename = os.path.join(output_dir, f"boxplot_{metric.replace(' ', '_').replace('%', 'perc').replace('/', 'per')}.png")
         plt.savefig(filename)
-        print(f"Saved summary plot to {filename}")
     plt.close('all')
 
-def plot_time_series_results(all_metrics):
-    """Plots the time-series line graphs."""
-    if not os.path.exists(OUTPUT_DIR):
-        os.makedirs(OUTPUT_DIR)
-        
-    scheduler_names = list(all_metrics.keys())
+def get_averaged_series(metrics_list, series_name):
+    all_series = []
+    for metrics in metrics_list:
+        df = pd.DataFrame({
+            'time': metrics.time_steps,
+            series_name: getattr(metrics, f"{series_name}_history")
+        }).set_index('time')
+        all_series.append(df)
     
-    # Plot 1: Average Temperature Over Time
+    combined_df = pd.concat(all_series, axis=1).interpolate(method='linear', limit_direction='both')
+    mean_series = combined_df.mean(axis=1)
+    return mean_series
+
+def plot_time_series_results(all_runs_metrics, window_size, output_dir):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        
+    scheduler_names = list(all_runs_metrics.keys())
+    
     plt.figure(figsize=(12, 7))
     for name in scheduler_names:
-        metrics = all_metrics[name]
-        plt.plot(metrics.time_steps, metrics.avg_temp_history, label=name)
-    plt.xlabel("Simulation Time (ms)")
+        mean_s = get_averaged_series(all_runs_metrics[name], 'avg_temp')
+        mean_s_smooth = mean_s.rolling(window=window_size, min_periods=1).mean()
+        plt.plot(mean_s_smooth.index, mean_s_smooth, label=name)
+    plt.title("Average Temperature Dynamics Over Time")
     plt.ylabel("Average Core Temperature (°C)")
-    plt.title("Temperature Dynamics Over Time")
+    plt.xlabel("Simulation Time (ms)")
     plt.legend()
     plt.grid(True, linestyle='--', alpha=0.6)
-    plt.tight_layout()
-    plt.savefig(os.path.join(OUTPUT_DIR, "timeseries_temperature.png"))
-    print("Saved time-series plot to plots/timeseries_temperature.png")
+    plt.savefig(os.path.join(output_dir, "avg_timeseries_temperature.png"))
+    plt.close()
 
-    # Plot 2: CPU Utilization Over Time
     plt.figure(figsize=(12, 7))
     for name in scheduler_names:
-        metrics = all_metrics[name]
-        plt.plot(metrics.time_steps, metrics.cpu_util_history, label=name, alpha=0.8)
+        mean_s = get_averaged_series(all_runs_metrics[name], 'cpu_util')
+        mean_s_smooth = mean_s.rolling(window=window_size, min_periods=1).mean()
+        plt.plot(mean_s_smooth.index, mean_s_smooth, label=name)
+    plt.title("Average CPU Utilization Dynamics Over Time")
+    plt.ylabel("Average Interval CPU Utilization (%)")
     plt.xlabel("Simulation Time (ms)")
-    plt.ylabel("Interval CPU Utilization (%)")
-    plt.title("CPU Utilization Dynamics Over Time")
     plt.legend()
     plt.grid(True, linestyle='--', alpha=0.6)
-    plt.tight_layout()
-    plt.savefig(os.path.join(OUTPUT_DIR, "timeseries_cpu_utilization.png"))
-    print("Saved time-series plot to plots/timeseries_cpu_utilization.png")
-
-    # Plot 3: Active Threats Over Time
+    plt.savefig(os.path.join(output_dir, "avg_timeseries_cpu_utilization.png"))
+    plt.close()
+    
     plt.figure(figsize=(12, 7))
     for name in scheduler_names:
-        metrics = all_metrics[name]
-        plt.plot(metrics.time_steps, metrics.active_threats_history, label=name)
+        mean_s = get_averaged_series(all_runs_metrics[name], 'active_threats')
+        plt.plot(mean_s.index, mean_s, label=name)
+    plt.title("Average Active Threats Over Time")
+    plt.ylabel("Average Number of Active Malicious Tasks")
     plt.xlabel("Simulation Time (ms)")
-    plt.ylabel("Number of Active Malicious Tasks")
-    plt.title("Threat Landscape Over Time")
     plt.legend()
     plt.grid(True, linestyle='--', alpha=0.6)
-    plt.tight_layout()
-    plt.savefig(os.path.join(OUTPUT_DIR, "timeseries_active_threats.png"))
-    print("Saved time-series plot to plots/timeseries_active_threats.png")
-
-    plt.show()
+    plt.savefig(os.path.join(output_dir, "avg_timeseries_active_threats.png"))
+    plt.close()

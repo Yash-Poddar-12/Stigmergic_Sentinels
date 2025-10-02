@@ -7,7 +7,6 @@ class CFSScheduler(BaseScheduler):
         if not tasks or not idle_cores:
             return
 
-        # Sort tasks by virtual runtime (lower is better)
         sorted_tasks = sorted(tasks, key=lambda t: t.vruntime)
 
         for task in sorted_tasks:

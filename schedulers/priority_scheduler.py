@@ -7,7 +7,6 @@ class PriorityScheduler(BaseScheduler):
         if not tasks or not idle_cores:
             return
 
-        # Sort tasks by priority (lower number is higher priority)
         sorted_tasks = sorted(tasks, key=lambda t: t.priority)
 
         for task in sorted_tasks:

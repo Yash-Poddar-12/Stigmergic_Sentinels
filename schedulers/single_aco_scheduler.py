@@ -13,15 +13,12 @@ class SingleACOScheduler(BaseScheduler):
         if not tasks or not idle_cores:
             return
 
-        for task in tasks[:]: # Iterate over a copy
+        for task in tasks[:]:
             if not idle_cores:
                 break
 
-            # Calculate probabilities for idle cores
             idle_core_ids = [c.id for c in idle_cores]
             pheromones = self.performance_pheromone[idle_core_ids]
-            
-            # Heuristic: prefer cores with lower temperature
             heuristics = np.array([1.0 / (c.temperature + 1e-5) for c in idle_cores])
             
             probabilities = (pheromones ** ALPHA_SINGLE_ACO) * (heuristics ** BETA_SINGLE_ACO)
@@ -30,7 +27,6 @@ class SingleACOScheduler(BaseScheduler):
             
             probabilities /= np.sum(probabilities)
 
-            # Roulette wheel selection
             chosen_core_idx = np.random.choice(len(idle_cores), p=probabilities)
             chosen_core = idle_cores.pop(chosen_core_idx)
             
@@ -38,12 +34,8 @@ class SingleACOScheduler(BaseScheduler):
             tasks.remove(task)
             
     def update(self, cores, current_time):
-        # Evaporation
         self.performance_pheromone *= (1 - RHO_SINGLE_ACO)
-        
-        # Deposition: Reward cores that are working on tasks
         for core in cores:
             if not core.is_idle():
-                # Reward is inversely proportional to task's remaining time (promotes finishing tasks)
                 reward = 1.0 / (core.current_task.remaining_burst + 1)
                 self.performance_pheromone[core.id] += reward

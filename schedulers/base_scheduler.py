@@ -7,12 +7,11 @@ class BaseScheduler(ABC):
 
     @abstractmethod
     def schedule(self, tasks, cores, current_time):
-        """Assigns tasks to idle cores."""
         pass
 
     def update(self, cores, current_time):
-        """Optional method for schedulers that need state updates (like ACO)."""
         pass
         
     def __str__(self):
-        return self.__class__.__name__
+        # A simple way to get a clean name for the progress bar
+        return self.__class__.__name__.replace("Scheduler", "")
